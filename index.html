@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- This makes the app "installable" on many browsers -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Budget Tracker</title>
+    
+    <!-- CSS (Styles) -->
+    <style>
+        /* CSS Variables for Dark Theme */
+        :root {
+            --bg-color: #222;
+            --container-bg: #333;
+            --text-color: #eee;
+            --border-color: #444;
+            --input-bg: #444;
+            --success-color: #2ecc71;
+            --error-color: #c0392b;
+            --accent-color: #5b9bd5;
+        }
+
+        /* General Reset and Body Styling */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+
+        h2, h3 {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 5px;
+            margin: 20px 0 10px;
+        }
+
+        /* Main App Container */
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--container-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Balance Display */
+        #balance {
+            font-size: 2.5rem;
+            letter-spacing: 1px;
+            margin: 10px 0;
+        }
+
+        /* Income/Expense Summary Box */
+        .inc-exp-container {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--bg-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .inc-exp-container > div {
+            flex: 1;
+            text-align: center;
+        }
+
+        .inc-exp-container > div:first-of-type {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .money {
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        .money.plus {
+            color: var(--success-color);
+        }
+
+        .money.minus {
+            color: var(--error-color);
+        }
+
+        /* Transaction History List */
+        #list {
+            list-style-type: none;
+            margin-bottom: 30px;
+        }
+
+        #list li {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 12px;
+            position: relative;
+        }
+
+        /* Color bar for income/expense */
+        #list li.plus {
+            border-right: 5px solid var(--success-color);
+        }
+
+        #list li.minus {
+            border-right: 5px solid var(--error-color);
+        }
+
+        /* Delete Button */
+        .delete-btn {
+            cursor: pointer;
+            background-color: var(--error-color);
+            border: 0;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 3px;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+        
+        .delete-btn:hover {
+            opacity: 1;
+        }
+
+        /* Form Styling */
+        .form-control {
+            margin-bottom: 15px;
+        }
+
+        .form-control label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-control input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        /* Helper text for amount */
+        .form-control small {
+            color: #aaa;
+        }
+
+        .btn {
+            cursor: pointer;
+            background-color: var(--accent-color);
+            color: white;
+            border: 0;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 1rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>My Budget Tracker</h1>
+
+    <div class="container">
+        <h2>Current Balance</h2>
+        <h1 id="balance">$0.00</h1>
+
+        <div class="inc-exp-container">
+            <div>
+                <h4>Income</h4>
+                <p id="money-plus" class="money plus">+$0.00</p>
+            </div>
+            <div>
+                <h4>Expense</h4>
+                <p id="money-minus" class="money minus">-$0.00</p>
+            </div>
+        </div>
+
+        <h3>History</h3>
+        <ul id="list" class="list">
+            <!-- Transactions will be dynamically added here by JS -->
+        </ul>
+
+        <h3>Add New Transaction</h3>
+        <form id="form">
+            <div class="form-control">
+                <label for="text">Description (Optional)</label>
+                <input type="text" id="text" placeholder="Enter description...">
+            </div>
+            <div class="form-control">
+                <label for="amount">Amount</label>
+                <input type="number" id="amount" step="0.01" placeholder="Enter amount...">
+                <small>(negative = expense, positive = income)</small>
+            </div>
+            <button class="btn">Add Transaction</button>
+        </form>
+    </div>
+
+    <!-- JavaScript (Logic) -->
+    <script>
+        // --- 1. Select DOM Elements ---
+        const balance = document.getElementById('balance');
+        const money_plus = document.getElementById('money-plus');
+        const money_minus = document.getElementById('money-minus');
+        const list = document.getElementById('list');
+        const form = document.getElementById('form');
+        const text = document.getElementById('text');
+        const amount = document.getElementById('amount');
+
+        // --- 2. Local Storage Setup ---
+        const localStorageKey = 'transactions';
+
+        // Get transactions from local storage or initialize as empty array
+        let transactions = localStorage.getItem(localStorageKey) 
+            ? JSON.parse(localStorage.getItem(localStorageKey)) 
+            : [];
+
+        // --- 3. Core Functions ---
+
+        /**
+         * Adds a new transaction when the form is submitted
+         * (UPDATED: Description is now optional)
+         */
+        function addTransaction(e) {
+            e.preventDefault(); // Prevent form from submitting and reloading page
+
+            // ONLY check for the amount
+            if (amount.value.trim() === '') {
+                alert('Please add an amount.'); // We can't use alert, but for this simple app, we'll keep it.
+            } else {
+                const transaction = {
+                    id: generateID(),
+                    text: text.value, // Will be an empty string if not filled
+                    amount: +amount.value // Convert string to number
+                };
+
+                // Add to our transactions array
+                transactions.push(transaction);
+
+                // Add to the DOM
+                addTransactionDOM(transaction);
+
+                // Update summary and balance
+                updateValues();
+
+                // Update local storage
+                updateLocalStorage();
+
+                // Clear form fields
+                text.value = '';
+                amount.value = '';
+                text.focus(); // Focus on the description field for the next entry
+            }
+        }
+
+        /**
+         * Generates a simple random ID
+         */
+        function generateID() {
+            return Math.floor(Math.random() * 100000000);
+        }
+
+        /**
+         * Adds a single transaction to the history list in the DOM
+         * (UPDATED: Handles empty descriptions)
+         */
+        function addTransactionDOM(transaction) {
+            // Get sign ( + or - )
+            const sign = transaction.amount < 0 ? '-' : '+';
+
+            // Create new list item
+            const item = document.createElement('li');
+
+            // Add class based on value (for styling)
+            item.classList.add(transaction.amount < 0 ? 'minus' : 'plus');
+
+            // Check for empty description
+            const description = transaction.text.trim() === '' 
+                ? '<i>(No Description)</i>' 
+                : transaction.text;
+
+            // Set the HTML for the list item
+            item.innerHTML = `
+                ${description} 
+                <span>${sign}${Math.abs(transaction.amount).toFixed(2)}</span> 
+                <button class="delete-btn" onclick="removeTransaction(${transaction.id})">x</button>
+            `;
+
+            // Add the new item to the list
+            list.appendChild(item);
+        }
+
+        /**
+         * Removes a transaction by its ID
+         */
+        function removeTransaction(id) {
+            // Filter out the transaction with the given id
+            transactions = transactions.filter(transaction => transaction.id !== id);
+
+            // Update local storage
+            updateLocalStorage();
+
+            // Re-initialize the app (easiest way to re-render)
+            init();
+        }
+
+        /**
+         * Updates the balance, income, and expense summaries
+         */
+        function updateValues() {
+            // 1. Get all amounts
+            const amounts = transactions.map(transaction => transaction.amount);
+
+            // 2. Calculate total balance
+            const total = amounts
+                .reduce((acc, item) => (acc += item), 0)
+                .toFixed(2);
+
+            // 3. Calculate total income
+            const income = amounts
+                .filter(item => item > 0)
+                .reduce((acc, item) => (acc += item), 0)
+                .toFixed(2);
+
+            // 4. Calculate total expense
+            const expense = (amounts
+                .filter(item => item < 0)
+                .reduce((acc, item) => (acc += item), 0) * -1)
+                .toFixed(2);
+
+            // 5. Update the DOM
+            balance.innerText = `$${total}`;
+            money_plus.innerText = `+$${income}`;
+            money_minus.innerText = `-$${expense}`;
+        }
+
+        /**
+         * Updates local storage with the current transactions array
+         */
+        function updateLocalStorage() {
+            localStorage.setItem(localStorageKey, JSON.stringify(transactions));
+        }
+
+        /**
+         * Initializes the app on page load
+         */
+        function init() {
+            list.innerHTML = ''; // Clear the list first
+            transactions.forEach(addTransactionDOM); // Add all transactions from storage
+            updateValues(); // Calculate and display initial values
+        }
+
+        // --- 4. Event Listeners ---
+        form.addEventListener('submit', addTransaction);
+
+        // --- 5. Run Init ---
+        init();
+
+    </script>
+</body>
+</html>
+
